@@ -1,7 +1,7 @@
 NodeJS Build Environment
 ========================
 
-Ready to build your NodeJS or React application. E.g. you could do in your Dockerfile:
+Docker image to build your NodeJS or React application. E.g. you could do in your Dockerfile to build a NestJS application:
 
 ```Dockerfile
 FROM mwaeckerlin/nodejs-build as build
@@ -16,9 +16,11 @@ ADD --chown=somebody package.json package.json
 ADD --chown=somebody package-lock.json package-lock.json
 RUN NODE_ENV=production npm install
 
-FROM mwaeckerlin/nodejs
-ENV CONTAINERNAME "project-name"
+FROM mwaeckerlin/nodejs as production
+ENV CONTAINERNAME "my.application"
+EXPOSE 4000
 COPY --from=modules /app/node_modules /app/node_modules
 COPY --from=build /app/build /app/build
-CMD node build/main
+COPY --from=build /app/dist /app/dist
+CMD ["/usr/bin/node", "dist/main"]
 ```
