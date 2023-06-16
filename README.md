@@ -7,6 +7,7 @@ The Classic Way
 Docker image to build your NodeJS or React application. E.g. you could do in your Dockerfile to build a NestJS application (`dist`) that includes a React frontend (`build`), so here's an example on how to create an optimized docker image:
 
 ```Dockerfile
+<<<<<<< HEAD
 # install only dependencies,
 # not devDependencies for the final image
 # only copy the necessary files, so a
@@ -25,19 +26,33 @@ RUN NODE_ENV=development npm install
 # such as Dockerfile or README.md, LICENSE, etc.
 ADD --chown=somebody . .
 RUN NODE_ENV=production npm run build
+=======
+FROM mwaeckerlin/nodejs-build AS build
+COPY --chown=${BUILD_USER} package.json package-lock.json ./
+RUN npm install
+COPY --chown=${BUILD_USER} . .
+RUN npm run build
+
+FROM mwaeckerlin/nodejs-build AS node-modules
+COPY --chown=${BUILD_USER} package.json package-lock.json ./
+RUN npm install
+>>>>>>> edd132f9a8241c443df6190eea85dd9318cb766f
 
 # now in final step, bring all together
 # import the smaller node_modules from first step
 # normally the build target is in dist or build
 FROM mwaeckerlin/nodejs as production
-ENV CONTAINERNAME "my-application"
 EXPOSE 4000
+<<<<<<< HEAD
 COPY --from=modules /app/node_modules /app/node_modules
 #COPY --from=build /app/build /app/build
+=======
+>>>>>>> edd132f9a8241c443df6190eea85dd9318cb766f
 COPY --from=build /app/dist /app/dist
-CMD ["/usr/bin/node", "dist/main"]
+COPY --from=node-modules /app/node_modules node_modules
 ```
 
+<<<<<<< HEAD
 Use Compiled JavaScript
 -----------------------
 
@@ -68,3 +83,8 @@ EXPOSE 4000
 COPY --from=build /app/app /app/app
 CMD ["/app/app"]
 ```
+=======
+The default `CMD` fits to the output of [mwaeckerlin/schematics](https://github.com/mwaeckerlin/schematics)).
+
+See also: [mwaeckerlin/nodejs](https://github.com/mwaeckerlin/nodejs)
+>>>>>>> edd132f9a8241c443df6190eea85dd9318cb766f
