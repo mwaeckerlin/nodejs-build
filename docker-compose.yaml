@@ -1,5 +1,0 @@
-version: '3.5'
-services:
-  nodejs-build:
-    image: mwaeckerlin/nodejs-build
-    build: .
