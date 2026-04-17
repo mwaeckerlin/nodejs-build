@@ -13,8 +13,8 @@ Docker image to build your NodeJS or React application. E.g. you could do in you
 # rebuild is rarely required and cache
 # can be reused
 FROM mwaeckerlin/nodejs-build as modules
-ADD --chown=somebody package.json package.json
-ADD --chown=somebody package-lock.json package-lock.json
+ADD --chown=${BUILD_USER} package.json package.json
+ADD --chown=${BUILD_USER} package-lock.json package-lock.json
 RUN NODE_ENV=production npm install
 
 # install additional devDependencies and build
@@ -23,7 +23,7 @@ RUN NODE_ENV=development npm install
 # import all sources only here where we need them
 # .dockerignore excludes what you don't need
 # such as Dockerfile or README.md, LICENSE, etc.
-ADD --chown=somebody . .
+ADD --chown=${BUILD_USER} . .
 RUN NODE_ENV=production npm run build
 
 # now in final step, bring all together
@@ -32,7 +32,7 @@ RUN NODE_ENV=production npm run build
 FROM mwaeckerlin/nodejs as production
 EXPOSE 4000
 COPY --from=build /app/dist /app/dist
-COPY --from=node-modules /app/node_modules node_modules
+COPY --from=modules /app/node_modules node_modules
 ```
 
 The default `CMD` fits to the output of [mwaeckerlin/schematics](https://github.com/mwaeckerlin/schematics)).
@@ -50,13 +50,13 @@ Project [nexe](https://github.com/nexe/nexe) provides a JavaScript compiler to g
 # rebuild is rarely required and cache
 # can be reused
 FROM mwaeckerlin/nodejs-build as build
-ADD --chown=somebody package.json package.json
-ADD --chown=somebody package-lock.json package-lock.json
+ADD --chown=${BUILD_USER} package.json package.json
+ADD --chown=${BUILD_USER} package-lock.json package-lock.json
 RUN npm install
 # import all sources only here where we need them
 # .dockerignore excludes what you don't need
 # such as Dockerfile or README.md, LICENSE, etc.
-ADD --chown=somebody . .
+ADD --chown=${BUILD_USER} . .
 RUN npm run build
 # now let's compile the dist,
 # if the main start file is in dist/src/main.js:
