@@ -1,6 +1,8 @@
 NodeJS Build Environment
 ========================
 
+Docker image to build NodeJS applications. **Not for deployments** — use this image only in build stages of a multi-stage Dockerfile; the final stage of a production image inherits from [mwaeckerlin/nodejs](https://github.com/mwaeckerlin/nodejs) (or [mwaeckerlin/scratch](https://github.com/mwaeckerlin/scratch) for compiled binaries), as shown in the examples below.
+
 The Classic Way
 ---------------
 

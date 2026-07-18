@@ -1,5 +1,5 @@
 FROM mwaeckerlin/build
-ENV CONTAINERNAME "build/node.js"
+ENV CONTAINERNAME="build/node.js"
 USER root
 RUN npm i -g nexe
 USER ${BUILD_USER}
