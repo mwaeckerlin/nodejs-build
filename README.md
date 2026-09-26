@@ -1,10 +1,8 @@
-NodeJS Build Environment
-========================
+# NodeJS Build Environment
 
-Docker image to build NodeJS applications. **Not for deployments** — use this image only in build stages of a multi-stage Dockerfile; the final stage of a production image inherits from [mwaeckerlin/nodejs](https://github.com/mwaeckerlin/nodejs) (or [mwaeckerlin/scratch](https://github.com/mwaeckerlin/scratch) for compiled binaries), as shown in the examples below.
+Docker image to build NodeJS applications. **Not for deployments** — use this image only in build stages of a multi-stage Dockerfile; the final stage of a production image inherits from [mwaeckerlin/nodejs](https://github.com/mwaeckerlin/nodejs), also for a compiled binary, which needs its shared libraries, as shown in the examples below.
 
-The Classic Way
----------------
+## The Classic Way
 
 Docker image to build your NodeJS or React application. E.g. you could do in your Dockerfile to build a NestJS application (`dist`) that includes a React frontend (`build`), so here's an example on how to create an optimized docker image:
 
@@ -14,13 +12,13 @@ Docker image to build your NodeJS or React application. E.g. you could do in you
 # only copy the necessary files, so a
 # rebuild is rarely required and cache
 # can be reused
-FROM mwaeckerlin/nodejs-build as modules
+FROM mwaeckerlin/nodejs-build AS modules
 ADD --chown=${BUILD_USER} package.json package.json
 ADD --chown=${BUILD_USER} package-lock.json package-lock.json
 RUN NODE_ENV=production npm install
 
 # install additional devDependencies and build
-FROM modules as build
+FROM modules AS build
 RUN NODE_ENV=development npm install
 # import all sources only here where we need them
 # .dockerignore excludes what you don't need
@@ -31,7 +29,7 @@ RUN NODE_ENV=production npm run build
 # now in final step, bring all together
 # import the smaller node_modules from first step
 # normally the build target is in dist or build
-FROM mwaeckerlin/nodejs as production
+FROM mwaeckerlin/nodejs AS production
 EXPOSE 4000
 COPY --from=build /app/dist /app/dist
 COPY --from=modules /app/node_modules node_modules
@@ -42,8 +40,7 @@ The default `CMD` fits to the output of [mwaeckerlin/schematics](https://github.
 See also: [mwaeckerlin/nodejs](https://github.com/mwaeckerlin/nodejs)
 
 
-Use Compiled JavaScript
------------------------
+## Use Compiled JavaScript
 
 Project [nexe](https://github.com/nexe/nexe) provides a JavaScript compiler to generate a single optimized all inclusive executable target file. So we can build the final image from scratch and copy only this target, e.g.
 
@@ -51,7 +48,7 @@ Project [nexe](https://github.com/nexe/nexe) provides a JavaScript compiler to g
 # only copy the necessary files, so a
 # rebuild is rarely required and cache
 # can be reused
-FROM mwaeckerlin/nodejs-build as build
+FROM mwaeckerlin/nodejs-build AS build
 ADD --chown=${BUILD_USER} package.json package.json
 ADD --chown=${BUILD_USER} package-lock.json package-lock.json
 RUN npm install
@@ -64,10 +61,21 @@ RUN npm run build
 # if the main start file is in dist/src/main.js:
 RUN nexe --build --python=$(which python3) -o app dist/src/main.js
 
-# now build the final image from scratch
-FROM mwaeckerlin/nodejs as production
-ENV CONTAINERNAME "my-application"
+# the final image is the Node.js runtime base, whose shared libraries
+# the compiled binary needs; the binary replaces its entrypoint node
+FROM mwaeckerlin/nodejs AS production
+ENV CONTAINERNAME="my-application"
 EXPOSE 4000
 COPY --from=build /app/app /app/app
-CMD ["/app/app", "--trace-uncaught"]
+ENTRYPOINT ["/app/app"]
+CMD ["--trace-uncaught"]
 ```
+
+## Development
+
+```bash
+$ npm run build
+$ npm test
+```
+
+`npm test` builds the image and runs `tests/build-contract.sh`: `node`, `npm` and `nexe` are installed, and a script compiled the way shown above runs on `mwaeckerlin/nodejs`. The image is built and published for `linux/amd64` and `linux/arm64` by the reusable workflow of [mwaeckerlin/scratch](https://github.com/mwaeckerlin/scratch#publishing-on-docker-hub); the first build compiles Node.js from source and takes more than an hour per architecture.

@@ -1,7 +1,10 @@
 {
   "name": "@mwaeckerlin/nodejs-build",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
-    "build": "docker compose build"
+    "build": "docker compose build",
+    "deploy": "docker compose push",
+    "test": "npm run build && npm run test:contract",
+    "test:contract": "bash tests/build-contract.sh mwaeckerlin/nodejs-build"
   }
 }
